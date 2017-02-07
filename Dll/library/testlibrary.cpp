@@ -2,7 +2,7 @@
 
 //----------------------------------------------------------------------
 
-int __stdcall FindMinimum(size_t count, const int* buffer)
+extern "C" int __stdcall FindMinimum(size_t count, const int* buffer)
 {
     int minimalElement = buffer[0];
 

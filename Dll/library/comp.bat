@@ -1,0 +1,1 @@
+cl testlibrary.cpp /LD /DEF testlibrary.def

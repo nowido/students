@@ -1,0 +1,92 @@
+<html>
+<body> 
+<style>
+#vid
+{
+    display: none;
+}    
+#pic
+{
+    display: none;
+}    
+</style>    
+
+<video id="vid"></video>    
+<canvas id="pic"></canvas> 
+<canvas id="picVisible"></canvas>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>    
+<script>
+$(() => 
+{
+    const desiredWidth = 1280;
+
+    const interval = 50;
+
+    const videoElement = $('#vid')[0];
+    const picElement = $('#pic')[0];
+    const picVisibleElement = $('#picVisible')[0];
+
+    const md = navigator.mediaDevices;
+
+    const pic = picElement.getContext('2d');
+    const picVisible = picVisibleElement.getContext('2d');
+    
+    //console.log(md.getSupportedConstraints());
+    
+    const videoConstraints = 
+    {
+        video: {width: {min: desiredWidth}}
+    };
+
+    md.enumerateDevices()
+        .then((info) => {
+            console.log(info);
+        })
+        .catch(console.log);
+
+    md.getUserMedia(videoConstraints)
+        .then((stream) => {
+
+            videoElement.srcObject = stream;
+            videoElement.onloadedmetadata = (e) => 
+            {
+                const w = picVisibleElement.width = picElement.width = videoElement.videoWidth;
+                const h = picVisibleElement.height = picElement.height = videoElement.videoHeight;
+                
+                videoElement.play();
+
+                setInterval(() => {
+                    pic.drawImage(videoElement, 0, 0);
+
+                    const imgData = pic.getImageData(0, 0, w, h);
+
+                    const bitmap = imgData.data;                    
+                    
+                    var index = 0;
+
+                    for(var i = 0; i < h; ++i)
+                    {
+                        for(var j = 0; j < w; ++j)
+                        {
+                            const r = bitmap[index + 0];
+                            const g = bitmap[index + 1];
+                            const b = bitmap[index + 2];
+
+                            bitmap[index + 0] = 2 * Math.abs(r - g);
+                            bitmap[index + 1] = 2 * Math.abs(g - b);
+                            bitmap[index + 2] = 2 * Math.abs(b - r);
+
+                            index += 4;
+                        }
+                    }
+                    
+                    picVisible.putImageData(imgData, 0, 0);                    
+                }, interval);
+            };
+        })
+        .catch(console.log);    
+});
+</script>
+</body>
+</html>    

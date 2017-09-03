@@ -33,59 +33,83 @@ $(() =>
     const picVisible = picVisibleElement.getContext('2d');
     
     //console.log(md.getSupportedConstraints());
-    
-    const videoConstraints = 
+
+    function onEnumeration(info)
     {
-        video: {width: {min: desiredWidth}}
-    };
+        //console.log(info);
 
-    md.enumerateDevices()
-        .then((info) => {
-            console.log(info);
-        })
-        .catch(console.log);
+        const length = info.length;
 
-    md.getUserMedia(videoConstraints)
-        .then((stream) => {
+        for(let i = 0; i < length; ++i)
+        {
+            const entry = info[i];
 
-            videoElement.srcObject = stream;
-            videoElement.onloadedmetadata = (e) => 
+            if(entry.kind === 'videoinput')
             {
-                const w = picVisibleElement.width = picElement.width = videoElement.videoWidth;
-                const h = picVisibleElement.height = picElement.height = videoElement.videoHeight;
+                onVideoFound(entry.deviceId);
+                break;
+            }
+        }                    
+    }
+        
+    function onVideoFound(deviceId)
+    {
+        const videoConstraints = 
+        {
+            deviceId: deviceId,
+            video: {width: {min: desiredWidth}}
+        };
+
+        md.getUserMedia(videoConstraints).then(onStreamOpen).catch(console.log);
+    }
+    
+    function onStreamOpen(stream)
+    {
+        const track = stream.getVideoTracks()[0];
+        const trackSettings = track.getSettings();
+
+        console.log(trackSettings);
+
+        videoElement.srcObject = stream;
+
+        videoElement.onloadedmetadata = (e) => 
+        {
+            const w = picVisibleElement.width = picElement.width = videoElement.videoWidth;
+            const h = picVisibleElement.height = picElement.height = videoElement.videoHeight;
+            
+            videoElement.play();
+
+            setInterval(() => {
+                pic.drawImage(videoElement, 0, 0);
+
+                const imgData = pic.getImageData(0, 0, w, h);
+
+                const bitmap = imgData.data;                    
                 
-                videoElement.play();
+                var index = 0;
 
-                setInterval(() => {
-                    pic.drawImage(videoElement, 0, 0);
-
-                    const imgData = pic.getImageData(0, 0, w, h);
-
-                    const bitmap = imgData.data;                    
-                    
-                    var index = 0;
-
-                    for(var i = 0; i < h; ++i)
+                for(var i = 0; i < h; ++i)
+                {
+                    for(var j = 0; j < w; ++j)
                     {
-                        for(var j = 0; j < w; ++j)
-                        {
-                            const r = bitmap[index + 0];
-                            const g = bitmap[index + 1];
-                            const b = bitmap[index + 2];
+                        const r = bitmap[index + 0];
+                        const g = bitmap[index + 1];
+                        const b = bitmap[index + 2];
 
-                            bitmap[index + 0] = 2 * Math.abs(r - g);
-                            bitmap[index + 1] = 2 * Math.abs(g - b);
-                            bitmap[index + 2] = 2 * Math.abs(b - r);
+                        bitmap[index + 0] = 2 * Math.abs(r - g);
+                        bitmap[index + 1] = 2 * Math.abs(g - b);
+                        bitmap[index + 2] = 2 * Math.abs(b - r);
 
-                            index += 4;
-                        }
+                        index += 4;
                     }
-                    
-                    picVisible.putImageData(imgData, 0, 0);                    
-                }, interval);
-            };
-        })
-        .catch(console.log);    
+                }
+                
+                picVisible.putImageData(imgData, 0, 0);                    
+            }, interval);
+        };
+    }
+    
+    md.enumerateDevices().then(onEnumeration).catch(console.log);    
 });
 </script>
 </body>

@@ -19,6 +19,8 @@
 <script>
 $(() => 
 {
+    const deviceNumber = 1; // 1 for default
+
     const desiredWidth = 1280;
 
     const interval = 50;
@@ -40,14 +42,21 @@ $(() =>
 
         const length = info.length;
 
+        var count = 0;
+
         for(let i = 0; i < length; ++i)
         {
             const entry = info[i];
 
             if(entry.kind === 'videoinput')
             {
-                onVideoFound(entry.deviceId);
-                break;
+                ++count;
+
+                if(count === deviceNumber)
+                {
+                    onVideoFound(entry.deviceId);
+                    break;
+                }                                
             }
         }                    
     }
@@ -55,9 +64,8 @@ $(() =>
     function onVideoFound(deviceId)
     {
         const videoConstraints = 
-        {
-            deviceId: deviceId,
-            video: {width: {min: desiredWidth}}
+        {            
+            video: {width: {min: desiredWidth}, deviceId: deviceId}
         };
 
         md.getUserMedia(videoConstraints).then(onStreamOpen).catch(console.log);
@@ -83,7 +91,7 @@ $(() =>
                 pic.drawImage(videoElement, 0, 0);
 
                 const imgData = pic.getImageData(0, 0, w, h);
-
+                /*
                 const bitmap = imgData.data;                    
                 
                 var index = 0;
@@ -103,7 +111,7 @@ $(() =>
                         index += 4;
                     }
                 }
-                
+                */
                 picVisible.putImageData(imgData, 0, 0);                    
             }, interval);
         };

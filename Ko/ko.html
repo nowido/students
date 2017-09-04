@@ -1,0 +1,31 @@
+<html>
+<body>
+
+    <div data-bind="html: tag"></div>
+    <div data-bind="html: counter"></div>
+    <ul data-bind="foreach: items">
+        <li data-bind="text: $data"></li>
+    </ul>
+    <button id="btn">OK</button>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.4.2/knockout-min.js"></script>    
+    <script>
+$(() => {
+
+    var vm = 
+    {
+        tag: '<strong>Hoo!</strong>',
+        counter: ko.observable('tt'),
+        items: ko.observableArray(['12', '34', '56'])
+    };
+
+    $('#btn').click(() => {
+        vm.counter(vm.counter() + "99");
+        vm.items.push('-');
+    });
+
+    ko.applyBindings(vm);
+});        
+    </script>    
+</body>
+</html>

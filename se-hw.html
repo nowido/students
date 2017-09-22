@@ -1,7 +1,6 @@
-﻿<html>
-
+﻿
+<html>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-
 <script>
 
     $(function main() {
@@ -10,149 +9,139 @@
 
         var view =
         {
-            	entryA: $('#a'), 
-            	entryB: $('#b'),
-		entryC: $('#c'),
-		
-		info: $('#info'),
+            entryA: $('#a'),
+            entryB: $('#b'),
+            entryC: $('#c'),
 
-            	getA: function () {
-                	let v = Number.parseFloat(this.entryA.val());
+            info: $('#info'),
 
-                	return Number.isNaN(v) ? 0 : v;
-            	},
-            	getB: function () {
-                	let v = Number.parseFloat(this.entryB.val());
+            getA: function () {
+                let v = Number.parseFloat(this.entryA.val());
 
-                	return Number.isNaN(v) ? 0 : v;
-            	},
-            	getC: function () {
-                	let v = Number.parseFloat(this.entryC.val());
+                return Number.isNaN(v) ? 0 : v;
+            },
+            getB: function () {
+                let v = Number.parseFloat(this.entryB.val());
 
-                	return Number.isNaN(v) ? 0 : v;
-            	},
+                return Number.isNaN(v) ? 0 : v;
+            },
+            getC: function () {
+                let v = Number.parseFloat(this.entryC.val());
 
-            	update: function (a, b, c, roots) {
-	
-                	this.entryA.val(a);
-                	this.entryB.val(b);
-                	this.entryC.val(c);
-			
-			if(roots.length === 2)
-			{
-				this.info.html('<p>x1 = ' + roots[0] + '<p>x2 = ' + roots[1]);
-			}
-			else if(roots.length === 1)
-			{
-				this.info.html('<p>x1, x2 = ' + roots[0]);
-			}
-			else
-			{
-				this.info.html('<p>No real roots. Really.');
-			}
-            	}
+                return Number.isNaN(v) ? 0 : v;
+            },
+
+            update: function (a, b, c, roots) {
+
+                this.entryA.val(a);
+                this.entryB.val(b);
+                this.entryC.val(c);
+
+                if (roots.length === 2) {
+                    this.info.html('<p>x<sub>1</sub> = ' + 
+					roots[0] + '<p>x<sub>2</sub> = ' 
+						+ roots[1]);
+                }
+                else if (roots.length === 1) {
+                    this.info.html('<p>x<sub>1</sub>, x<sub>2</sub> = ' + roots[0]);
+                }
+                else {
+                    this.info.html('<p>No real roots. Really.');
+                }
+            }
         };
 
-        // model: 
+        // model:
 
         var model =
         {
-           	a: 0,
-            	b: 0,
-		c: 0,
+            a: 0,
+            b: 0,
+            c: 0,
 
-		roots: [],		
+            roots: [],
 
             calcRoots: function () {
-		
-		let D = this.b * this.b - 4 * this.a * this.c;
 
-		let f2a = 2 * this.a;
+                let D = this.b * this.b - 4 * this.a * this.c;
 
-		this.roots = [];
+                let f2a = 2 * this.a;
 
-		if(D > 0)
-		{
-			let sqrtD = Math.sqrt(D);
+                this.roots = [];
 
-			this.roots[0] = (-this.b + sqrtD) / f2a;
-			this.roots[1] = (-this.b - sqrtD) / f2a;
-		}
-		else if(D < 0)
-		{
+                if (D > 0) {
+                    let sqrtD = Math.sqrt(D);
 
-			return;
-		}
-		else
-		{
-			this.roots[0] = -this.b / f2a;
-		}
+                    this.roots[0] = (-this.b + sqrtD) / f2a;
+                    this.roots[1] = (-this.b - sqrtD) / f2a;
+                }
+                else if (D < 0) {
+
+                    return;
+                }
+                else {
+                    this.roots[0] = -this.b / f2a;
+                }
             },
         };
 
         // controller
-		
+
         view.entryA.change(function () {
 
-		model.a = view.getA();
-	
-		model.calcRoots();
+            model.a = view.getA();
 
-		view.update(model.a, model.b, model.c, model.roots);
+            model.calcRoots();
+
+            view.update(model.a, model.b, model.c, model.roots);
         });
 
         view.entryB.change(function () {
 
-		model.b = view.getB();
-	
-		model.calcRoots();
+            model.b = view.getB();
 
-		view.update(model.a, model.b, model.c, model.roots);
+            model.calcRoots();
+
+            view.update(model.a, model.b, model.c, model.roots);
         });
 
         view.entryC.change(function () {
 
-		model.c = view.getC();
-	
-		model.calcRoots();
+            model.c = view.getC();
 
-		view.update(model.a, model.b, model.c, model.roots);
+            model.calcRoots();
+
+            view.update(model.a, model.b, model.c, model.roots);
         });
 
         // init
         view.update(model.a, model.b, model.c, model.roots);
     });
 </script>
-
 <style>
-	span
-	{
-		color: blue;
-	}
+    span {
+        color: blue;
+    }
 
-	input
-	{
-		margin: 5px;
-		width: 70px;
-	}	
+    input {
+        margin: 5px;
+        width: 70px;
+    }
 
-	#info
-	{
-		color: brown;
-	}
+    #info {
+        color: brown;
+    }
 </style>
-
 <body>
-	<div>
-		<span>A</span>
-		<input id="a" type="text">
-		<span>B</span>
-		<input id="b" type="text">
-		<span>C</span>
-		<input id="c" type="text">
-
-	</div>
-	<div id="info">
-	</div>
+    <div>
+        <span>A</span>
+        <input id="a" type="text">
+        <span>B</span>
+        <input id="b" type="text">
+        <span>C</span>
+        <input id="c" type="text">
+    </div>
+    <div id="info">
+    </div>
 </body>
 </html>

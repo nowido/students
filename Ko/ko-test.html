@@ -1,0 +1,130 @@
+<html>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="http://ajax.aspnetcdn.com/ajax/knockout/knockout-3.4.2.js"></script>
+
+    <script>
+$(() => {
+
+    var model = 
+    {
+        a: 0,
+        b: 0,
+        c: 0,
+        
+        roots: [],
+
+        calcRoots: () => {
+
+            let a = model.a;
+            let b = model.b;
+            let c = model.c;
+
+            const D = b * b - 4 * a * c;
+
+            if(D < 0)
+            {
+                model.roots = [];
+            }
+            else if(D > 0)
+            {
+                let rd = Math.sqrt(D);
+                let a2 = 2 * a;
+                model.roots = [(-b + rd) / a2, (-b - rd) / a2];            
+            }
+            else // if D === 0
+            {
+                model.roots = [-b / 2 / a];
+            }
+
+            return model.roots;
+        }
+    };
+
+    var viewModel = {
+
+        a: ko.pureComputed({
+            read: () => {return model.a},
+            write: (value) => 
+            {
+                let v = Number.parseFloat(value);
+                model.a = Number.isNaN(v) ? 0 : v;
+                
+                viewModel.roots(model.calcRoots());
+            }
+        }),
+
+        b: ko.pureComputed({
+            read: () => {return model.b},
+            write: (value) => 
+            {
+                let v = Number.parseFloat(value);
+                model.b = Number.isNaN(v) ? 0 : v;
+                
+                viewModel.roots(model.calcRoots());
+            }
+        }),
+
+        c: ko.pureComputed({
+            read: () => {return model.c},
+            write: (value) => 
+            {
+                let v = Number.parseFloat(value);
+                model.c = Number.isNaN(v) ? 0 : v;
+                
+                viewModel.roots(model.calcRoots());
+            }
+        }),
+
+        roots: ko.observable(model.roots),
+
+        info: ko.pureComputed(() => {
+
+            let roots = viewModel.roots();
+
+            if(roots.length === 0)
+            {
+                return '<span class="warn">No real roots. Really.</span>';
+            }
+            else if(roots.length === 1)
+            {
+                return '<span class="norm">x<sub>1</sub> = x<sub>2</sub> = ' + model.roots[0] + '</span>';
+            }
+            else
+            {
+                return '<span class="norm">x<sub>1</sub> = ' + model.roots[0] + ', x<sub>2</sub> = ' + model.roots[1] + '</span>';
+            }
+        })
+    };
+        
+    ko.applyBindings(viewModel);
+})        
+    </script>
+
+    <style>
+        .warn
+        {
+            color: red;
+        }
+
+        .norm
+        {
+            color: brown;
+        }
+    </style>
+
+    <body>
+        <div>
+            <div>
+                <span>A:</span>
+                <input type="text" data-bind="textInput: a">
+                <span>B:</span>
+                <input type="text" data-bind="textInput: b">
+                <span>C:</span>
+                <input type="text" data-bind="textInput: c">                
+            </div>
+        </div>
+        <p></p>
+        <div data-bind="html: info">            
+        </div>
+    </body>
+</html>

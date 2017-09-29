@@ -4,7 +4,6 @@
 
 <script>
 $(() => {
-
     var model = 
     {
         a: 1, // a must be non-zero
@@ -12,15 +11,11 @@ $(() => {
         c: 0,
         
         roots: [],
-
         calcRoots: () => {
-
             let a = model.a;
             let b = model.b;
             let c = model.c;
-
             const D = b * b - 4 * a * c;
-
             if(D < 0)
             {
                 model.roots = [];
@@ -35,11 +30,9 @@ $(() => {
             {
                 model.roots = [-b / 2 / a];
             }
-
             return model.roots;
         }
     };
-
     var viewModel = 
     {
         textA: ko.observable(model.a),
@@ -52,36 +45,26 @@ $(() => {
     function prepareInfo()
     {
         let v = Number.parseFloat(viewModel.textA());
-
         if((v !== 0) && !Number.isNaN(v))
         {                    
             model.a = v;                
         }
-
         v = Number.parseFloat(viewModel.textB());
-
         if(!Number.isNaN(v))
         {                    
             model.b = v;    
         }
-
         v = Number.parseFloat(viewModel.textC());
-
         if(!Number.isNaN(v))
         {                    
             model.c = v;    
         }
-
         viewModel.textA(model.a);
         viewModel.textB(model.b);
         viewModel.textC(model.c);
-
         model.calcRoots();
-
         let roots = model.roots;
-
         let content;
-
         if(roots.length === 0)
         {
             content = '<span>No real roots. Really.</span>';
@@ -94,14 +77,10 @@ $(() => {
         {
             content = '<span>x<sub>1</sub> = ' + roots[0] + '<br>x<sub>2</sub> = ' + roots[1] + '</span>';
         }
-
         viewModel.infoStyle({warn: roots.length === 0, norm: roots.length > 0});
-
         return content;
     }
-
     viewModel.info = ko.computed(prepareInfo);
-
     ko.applyBindings(viewModel);
 })        
 </script>
@@ -111,7 +90,6 @@ $(() => {
     {
         color: red;
     }
-
     .norm
     {
         color: brown;
@@ -122,11 +100,11 @@ $(() => {
     <div>
         <div>
             <span>A:</span>
-            <input type="text" data-bind="textInput: textA">
+            <input type="text" data-bind="value: textA">
             <span>B:</span>
-            <input type="text" data-bind="textInput: textB">
+            <input type="text" data-bind="value: textB">
             <span>C:</span>
-            <input type="text" data-bind="textInput: textC">                
+            <input type="text" data-bind="value: textC">                
         </div>
     </div>
     <p></p>

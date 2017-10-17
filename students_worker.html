@@ -1,0 +1,72 @@
+<html>
+<script>
+
+function WorkerProc()
+{
+    function process(data)
+    {
+        return {result: 'Some result from ' + data};
+    }
+
+    onmessage = function (msg)
+    {
+        let data = msg.data;
+
+        let result = process(data.arg);
+
+        postMessage(result);
+    }
+}
+
+function print(s)
+{
+    let info = document.getElementById('info');
+
+    info.innerHTML += s + '<br>';
+}
+
+function createScriptUri(code)
+{
+    let script = '(' + code + ')();';
+
+    let blob = new Blob([script], {type: 'text/javascript'});
+
+    return URL.createObjectURL(blob);
+}
+
+function main()
+{    
+    let scriptUri = createScriptUri(WorkerProc.toString());
+
+    let w = new Worker(scriptUri);
+
+    if(w)
+    {
+        print('Starting worker... Done.');
+    }
+
+    w.onmessage = function(msg)
+    {
+        let data = msg.data;
+
+        print('result: &quot;' + data.result + '&quot;');
+
+        print('Terminating worker... Done.');
+
+        w.terminate();
+
+        URL.revokeObjectURL(scriptUri);
+    }    
+
+    let arg = 'some data';
+
+    print('arg: &quot;' + arg + '&quot;');
+
+    w.postMessage({arg: arg});
+}
+
+</script>
+<body onload="main()">
+    <div id="info"></div>    
+</body>
+</html>

@@ -1,0 +1,280 @@
+<html>
+<script>
+
+function WorkerProc()
+{
+    function minimize(searchParameters)
+    {
+        let f = searchParameters.func;
+        let innerTries = searchParameters.innerTries;
+        let currentOpt = searchParameters.currentOpt;
+
+        let bounds = currentOpt.bounds;
+        
+        const dim = bounds.left.length;
+        
+        let xOpt;
+        let minValue;
+        
+        let range = [];
+        
+        if(currentOpt.x)
+        {
+            xOpt = currentOpt.x;
+            minValue = currentOpt.f;
+            
+            for(let i = 0; i < dim; ++i)
+            {
+                range[i] = (bounds.right[i] - bounds.left[i]) / 4;
+            }
+
+            for(let i = 0; i < dim; ++i)
+            {
+                bounds.left[i] = currentOpt.x[i] - range[i];
+                bounds.right[i] = currentOpt.x[i] + range[i];
+            }
+        }
+
+        let stepX = [];
+
+        for(let i = 0; i < dim; ++i)
+        {
+            stepX[i] = (bounds.right[i] - bounds.left[i]) / 2;
+        }
+
+        let x = [];
+
+        let maxCount = Math.pow(2, dim);
+
+        for(let i = 0; i < maxCount; ++i)
+        {
+            for(let t = 0; t < innerTries; ++t)
+            {
+                let mask = 1;
+
+                for(let j = 0; j < dim; ++j)
+                {
+                    let b = (i & mask) ? stepX[j] : 0;
+                    
+                    x[j] = bounds.left[j] + b + Math.random() * stepX[j];
+
+                    mask <<= 1;
+                }
+
+                let fValue = f(x);
+
+                if((fValue < minValue) || (minValue === undefined))
+                {
+                    minValue = fValue;
+
+                    if(xOpt === undefined)
+                    {
+                        xOpt = [];
+                    }
+
+                    for(let a = 0; a < dim; ++a)
+                    {
+                        xOpt[a] = x[a];
+                    }
+                }
+            }
+        }
+
+        return {x: xOpt, f: minValue, bounds: bounds};
+    }
+
+    function process(threadIndex, threadsCount, currentOpt)
+    {        
+            // function coefficients
+        const a = [5, -2, -5, 3, 6, 0, 1, -1, 2, 3];
+        const b = 10;
+        
+            // space dimension
+        const dim = a.length;
+
+            // search space partitioning:
+            // adjust search outbounds if nothing provided
+
+        if(currentOpt === undefined)
+        {
+            const leftBound = -10;
+            const rightBound = 10;
+
+                // individual thread search range for x[0]
+            //const threadRangeStep = (rightBound - leftBound) / threadsCount;
+            
+            let boundsLeft = [];
+            let boundsRight = [];
+
+            for(let i = 0; i < dim; ++i)
+            {
+                boundsLeft[i] = leftBound;
+                boundsRight[i] = rightBound;
+                
+                /*
+                if(i !== 0)
+                {
+                    boundsLeft[i] = leftBound;
+                    boundsRight[i] = rightBound;
+                }
+                else
+                {
+                    boundsLeft[i] = leftBound + threadIndex * threadRangeStep;
+                    boundsRight[i] = leftBound + (threadIndex + 1) * threadRangeStep;
+                }
+                */
+            }
+
+            currentOpt = {bounds: {left: boundsLeft, right: boundsRight}};
+        }
+        
+    // run search algorithm
+
+        return minimize
+        ({            
+            func: function f(x)
+            {
+                let fValue = b;
+            
+                const argsCount = a.length;
+
+                for(let i = 0; i < argsCount; ++i)
+                {
+                    let v = (x[i] - a[i]);
+
+                    fValue += v * v;
+                }
+
+                return fValue;
+            },
+
+            innerTries: 1000 / threadsCount, 
+            currentOpt: currentOpt
+        });
+    }
+
+    function runIterations(count, threadIndex, threadsCount)
+    {
+        let currentOpt;
+
+        for(let i = 0; i < count; ++i)
+        {            
+            currentOpt = process(threadIndex, threadsCount, currentOpt);            
+        }
+
+        return currentOpt;
+    }
+
+    onmessage = function (msg)
+    {
+        let data = msg.data;
+
+        let result = runIterations(data.iterationsCount, data.threadIndex, data.threadsCount);
+
+        postMessage({result: result, threadIndex: data.threadIndex});
+    }
+}
+
+function print(s)
+{
+    let info = document.getElementById('info');
+
+    info.innerHTML += s + '<br>';
+}
+
+function createScriptUri(code)
+{
+    let script = '(' + code + ')();';
+
+    let blob = new Blob([script], {type: 'text/javascript'});
+
+    return URL.createObjectURL(blob);
+}
+
+function main()
+{    
+    let scriptUri = createScriptUri(WorkerProc.toString());
+
+    const workersCount = 2; // should reasonably match CPUs count
+
+    let workers = [];
+
+    for(let i = 0; i < workersCount; ++i)
+    {
+        workers[i] = new Worker(scriptUri);
+
+        print('Starting worker #' + i + '... Done.');
+    }
+
+    let resultsCount = 0;
+
+    let fOpt;
+    let xOpt;    
+    let boundsOpt;
+    let finder;
+
+    function onWorkerMessage(msg)
+    {
+        ++resultsCount;
+
+        let data = msg.data;
+
+        let index = data.threadIndex;
+        
+        let result = data.result;
+
+        let f = result.f;
+
+        if((fOpt === undefined) || (f < fOpt))
+        {
+            fOpt = f;
+            xOpt = result.x;            
+            boundsOpt = result.bounds;
+            finder = index;
+        }
+
+        if(resultsCount === workersCount)
+        {
+            let timeEnd = Date.now();
+            
+            print('fOpt = ' + fOpt);
+
+            for(let i = 0; i < xOpt.length; ++i)
+            {
+                print('xOpt[' + i + '] = ' + xOpt[i]);          
+            }
+
+            print('found by worker #' + finder);
+
+            print('Done in ' + Math.floor((timeEnd - timeStart) / 1000) + ' s.');
+
+            for(let i = 0; i < workersCount; ++i)
+            {
+                print('Terminating worker #' + i + '... Done.');
+                
+                workers[i].terminate();
+            }
+
+            URL.revokeObjectURL(scriptUri);
+        }        
+    }    
+
+    let arg = {iterationsCount: 10, threadsCount: workersCount};
+
+    var timeStart = Date.now();
+
+    for(let i = 0; i < workersCount; ++i)
+    {
+        arg.threadIndex = i; 
+
+        workers[i].onmessage = onWorkerMessage;
+
+        workers[i].postMessage(arg);
+    }
+}
+
+</script>
+<body onload="main()">
+    <div id="info"></div>    
+</body>
+</html>

@@ -1,0 +1,148 @@
+<html>
+
+<script src=https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js></script>
+
+<script>
+$(() => {
+
+//////////////////////// model
+
+var model = {};
+
+model.touches = [];
+
+model.useCurrentTouches = (touchesList) => 
+{
+    //console.log(touchesList);
+    
+    model.touches = [];
+
+    for(let i = 0; i < touchesList.length; ++i)
+    {
+        let touch = touchesList[i];
+
+        model.touches.push({x: touch.clientX, y: touch.clientY});
+    }
+
+    model.controller.updateView();
+}
+
+//////////////////////// view
+
+var view = {};
+
+view.surface = $('#surface');
+
+view.windowWidth = $('body').innerWidth();
+view.windowHeight = $('body').innerHeight();
+
+view.surface.attr('width', view.windowWidth);
+view.surface.attr('height', view.windowHeight);
+
+view.drawingContext = view.surface[0].getContext('2d');
+
+view.targetRect = 
+{
+    left: view.windowWidth / 4, 
+    top: view.windowHeight / 4, 
+    width: view.windowWidth / 2,
+    height: view.windowHeight / 2 
+}
+
+view.drawBackground = () => 
+{
+    let ctx = view.drawingContext;
+
+    ctx.fillStyle = 'rgb(180, 180, 255)';
+    ctx.fillRect(0, 0, view.windowWidth, view.windowHeight);
+
+    let target = view.targetRect;
+    
+    ctx.fillStyle = 'blue';
+    ctx.fillRect(target.left, target.top, target.width, target.height);
+}
+
+view.drawTouches = (touches) => 
+{        
+    let ctx = view.drawingContext;
+
+    ctx.fillStyle = 'white';
+    
+    for(let i = 0; i < touches.length; ++i)
+    {
+        let touch = touches[i];
+
+        if(view.checkTouch(touch))
+        {
+            ctx.beginPath();
+            ctx.arc(touch.x, touch.y, view.touchRadius, 0, 2 * Math.PI);        
+            ctx.fill();
+        }
+    }    
+}
+
+view.checkTouch = (touch) => 
+{
+    let target = view.targetRect;
+
+    let right = target.left + target.width;
+    let bottom = target.top + target.height;
+
+    return (touch.x >= target.left) && (touch.x <= right) && 
+            (touch.y >= target.top) && (touch.y <= bottom);
+}
+
+view.touchRadius = 100;
+
+//////////////////////// controller
+
+var controller = {};
+
+controller.model = model;
+controller.view = view;
+
+controller.ontouch = (evt) => 
+{    
+    controller.model.useCurrentTouches(evt.touches);
+}
+
+controller.setListeners = () => 
+{
+    let surface = controller.view.surface;
+    let ontouch = controller.ontouch;
+
+    surface.bind('touchstart', ontouch);
+    surface.bind('touchend', ontouch);
+    surface.bind('touchmove', ontouch);
+    surface.bind('touchcancel', ontouch);
+}
+
+controller.updateView = () => 
+{
+    view.drawBackground();
+    view.drawTouches(controller.model.touches);
+}
+
+//////////////////////// run
+
+model.controller = controller;
+
+view.drawBackground();
+
+controller.setListeners();
+
+});
+</script>
+
+<style>
+    body
+    {
+        margin: 0px;
+        padding: 0px;
+    }
+</style>
+
+<body>
+    <canvas id="surface"></canvas>
+</body>
+</html>
